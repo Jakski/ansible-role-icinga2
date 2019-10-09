@@ -1,0 +1,26 @@
+---
+- hosts: instance
+  tasks:
+    - name: Install HTTPS transport for APT
+      apt:
+        name: apt-transport-https
+        state: "present"
+
+    - name: Add repository key
+      apt_key:
+        id: "F51A91A5EE001AA5D77D53C4C6E319C334410682"
+        data: "{{ lookup('file', 'icinga2.key') }}"
+        state: "present"
+
+    - name: Add repository source
+      apt_repository:
+        repo: "{{ item }}"
+        filename: "icinga2"
+        update_cache: true
+        state: "present"
+      loop:
+        - "deb https://packages.icinga.com/debian icinga-{{ ansible_facts.distribution_release }} main"
+        - "deb-src https://packages.icinga.com/debian icinga-{{ ansible_facts.distribution_release }} main"
+
+    #- import_role:
+        #name: icinga2

@@ -1,0 +1,73 @@
+---
+- name: Install Icinga2
+  apt:
+    name: "{{ icinga2_package }}"
+    default_release: "{{ icinga2_default_release }}"
+    state: present
+
+- name: Configure Icinga2 service
+  service:
+    name: "{{ icinga2_service }}"
+    state: "{{ icinga2_state }}"
+    enabled: "{{ icinga2_enabled }}"
+
+- name: Configure Icinga2 features
+  copy:
+    dest: "{{ icinga2_conf_dir }}/features-available/{{ item.key }}.conf"
+    content: "{{ item.values }}"
+    owner: "{{ icinga2_user }}"
+    group: "{{ icinga2_group }}"
+    mode: "0644"
+  when: item.value is string
+  loop: "{{ icinga2_features | dict2items }}"
+  loop_control:
+    label: "{{ item.key }}"
+
+- name: Find enabled Icinga2 features
+  find:
+    path: "{{ icinga2_conf_dir }}/features-enabled"
+    recurse: false
+    file_type: any
+    patterns: "*.conf"
+  when: icinga2_manage_features
+  register: _icinga2_enabled_features
+
+- name: Remove unmanaged Icinga2 features
+  file:
+    path: "{{ item.path }}"
+    state: absent
+  when: >
+    (item.path | basename | regex_replace('(.*)\.conf$', '\\1')) not in icinga2_.keys()
+    and icinga2_manage_features
+  loop: "{{ _icinga2_enabled_features.files }}"
+  loop_control:
+    label: "{{ item.path }}"
+  notify:
+    - Restart Icinga2
+
+- name: Enable Icinga2 features
+  file:
+    dest: "{{ icinga2_conf_dir }}/features-enabled/{{ item.key }}.conf"
+    src: "../features-available/{{ item.key }}.conf"
+    state: "present"
+    owner: "{{ icinga2_user }}"
+    group: "{{ icinga2_group }}"
+  loop: "{{ icinga2_features | dict2items }}"
+
+- name: Create Icinga2 CA certificate
+  copy:
+    dest: "{{ icinga2_var_dir }}/ca/ca.crt"
+    content: "{{ icinga2_ca_cert }}"
+    owner: "{{ icinga2_user }}"
+    group: "{{ icinga2_group }}"
+    mode: "0644"
+  when: icinga2_ca_cert is not none
+
+- name: Create Icinga2 CA key
+  copy:
+    dest: "{{ icinga2_var_dir }}/ca/ca.key"
+    content: "{{ icinga2_ca_key }}"
+    owner: "{{ icinga2_user }}"
+    group: "{{ icinga2_group }}"
+    mode: "0600"
+  when: icinga2_ca_key is not none
