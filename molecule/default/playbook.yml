@@ -1,5 +1,13 @@
 ---
-- hosts: instance
+- hosts: "master-{{ lookup('env', 'MOLECULE_INSTANCE_SUFFIX') | default('instance', true) }}"
+  vars:
+    role_defaults: "{{ lookup('file', role_path + '/defaults/main.yml') | from_yaml }}"
+    objects:
+      host2: |
+        object Host "host2" {
+          import "generic-host"
+          address = "127.0.0.1"
+        }
   tasks:
     - name: Install HTTPS transport for APT
       apt:
@@ -9,7 +17,7 @@
     - name: Add repository key
       apt_key:
         id: "F51A91A5EE001AA5D77D53C4C6E319C334410682"
-        data: "{{ lookup('file', 'icinga2.key') }}"
+        data: "{{ lookup('file', 'repository.key') }}"
         state: "present"
 
     - name: Add repository source
@@ -22,5 +30,20 @@
         - "deb https://packages.icinga.com/debian icinga-{{ ansible_facts.distribution_release }} main"
         - "deb-src https://packages.icinga.com/debian icinga-{{ ansible_facts.distribution_release }} main"
 
-    #- import_role:
-        #name: icinga2
+    - import_role:
+        name: icinga2
+      vars:
+        icinga2_features: "{{ role_defaults.icinga2_features | combine({'api': None}) }}"
+        icinga2_zones:
+          test3.local:
+            hosts: |
+              object Host "host1" {
+                import "generic-host"
+                address = "127.0.0.1"
+              }
+            groups: |
+              object HostGroup "freebsd-servers" {
+                display_name = "FreeBSD"
+                assign where host.vars.os == "FreeBSD"
+              }
+        icinga2_objects_conf: "{{ role_defaults.icinga2_objects_conf | combine(objects) }}"

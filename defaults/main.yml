@@ -1,3 +1,148 @@
+---
 ###
-# Role parameter
-icinga2_param: value
+# System service name
+icinga2_service: icinga2
+
+###
+# Master node with ability to sign client certificates
+icinga2_master: master-instance
+
+###
+# Packages with Icinga2
+icinga2_packages: icinga2
+
+###
+# Default packages release
+icinga2_default_release: ""
+
+###
+# Desired service state
+icinga2_state: started
+
+###
+# Whether to enable system service
+icinga2_enabled: true
+
+###
+# Whether to restart when necessary
+icinga2_restart: true
+
+###
+# Whether to reload when necessary
+icinga2_reload: true
+
+###
+# Main configuration file template
+icinga2_conf_template: icinga2.conf.j2
+
+###
+# User for service and file system permissions
+icinga2_user: nagios
+
+###
+# Group for service and file system permissions
+icinga2_group: nagios
+
+###
+# Configuration includes
+icinga2_conf_includes:
+  - "<itl>"
+  - "<plugins>"
+  - "<plugins-contrib>"
+  - "<manubulon>"
+  - "<windows-plugins>"
+  - "<nscp>"
+  - "zones.conf"
+  - "features-enabled/*.conf"
+
+###
+# Recursive configuration includes
+icinga2_conf_recursive_includes:
+  - conf.d
+
+###
+# Data directory
+icinga2_data_dir: /var/lib/icinga2
+
+###
+# Configuration directory
+icinga2_conf_dir: /etc/icinga2
+
+###
+# Configuration constants
+icinga2_constants:
+  DataDir: "{{ icinga2_data_dir }}"
+  ConfigDir: "{{ icinga2_conf_dir }}"
+  PluginDir: /usr/lib/nagios/plugins
+  ManubulonPluginDir: /usr/lib/nagios/plugins
+  PluginContribDir: /usr/lib/nagios/plugins
+  NodeName: "{{ ansible_facts.fqdn }}"
+  ZoneName: "{{ ansible_facts.fqdn }}"
+  TicketSalt: ""
+
+###
+# Custom Icinga2 main configuration fragment
+icinga2_conf_extra: ""
+
+###
+# Features configuration
+icinga2_features:
+  checker: ~
+  mainlog: ~
+  notification: ~
+
+###
+# Whether to disable unmanaged features
+icinga2_manage_features: true
+
+###
+# CA certificate
+icinga2_ca_cert: ~
+
+###
+# CA key
+icinga2_ca_key: ~
+
+###
+# Client certificate
+icinga2_client_cert: ~
+
+###
+# Client certificate key
+icinga2_client_key: ~
+
+###
+# Whether to manage files in scripts, zones and objects directory
+icinga2_manage_conf: true
+
+###
+# Directory with scripts
+icinga2_scripts_dir: "{{ icinga2_conf_dir }}/scripts"
+
+###
+# Directory with objects configuration
+icinga2_objects_dir: "{{ icinga2_conf_dir }}/conf.d"
+
+###
+# Objects configuration files
+icinga2_objects_conf:
+  app: ~
+  commands: ~
+  downtimes: ~
+  groups: ~
+  hosts: ~
+  notifications: ~
+  services: ~
+  templates: ~
+  timeperiods: ~
+  users: ~
+
+###
+# Zones
+icinga2_zones: {}
+
+###
+# Scripts
+icinga2_scripts:
+  mail-host-notification.sh: ~
+  mail-service-notification.sh: ~

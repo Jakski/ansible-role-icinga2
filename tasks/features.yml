@@ -1,0 +1,39 @@
+---
+- name: Configure Icinga2 features
+  copy:
+    dest: "{{ icinga2_conf_dir }}/features-available/{{ item.key }}.conf"
+    content: "{{ item.value }}"
+    owner: "{{ icinga2_user }}"
+    group: "{{ icinga2_group }}"
+    mode: "0644"
+  when: item.value is string
+  loop: "{{ icinga2_features | dict2items }}"
+  loop_control:
+    label: "{{ item.key }}"
+  notify:
+    - Restart Icinga2
+
+- include_tasks: purge-unmanaged.yml
+  when: icinga2_manage_features | bool
+  vars:
+    title: "enabled features"
+    path: "{{ icinga2_conf_dir }}/features-enabled"
+    recurse: false
+    patterns:
+      - "*.conf"
+    managed: "{{ icinga2_features.keys() | product(['conf']) | map('join', '.') | list }}"
+    notify:
+      - Restart Icinga2
+
+- name: Enable Icinga2 features
+  file:
+    dest: "{{ icinga2_conf_dir }}/features-enabled/{{ item.key }}.conf"
+    src: "../features-available/{{ item.key }}.conf"
+    state: "link"
+    owner: "{{ icinga2_user }}"
+    group: "{{ icinga2_group }}"
+  loop: "{{ icinga2_features | dict2items }}"
+  loop_control:
+    label: "{{ item.key }}"
+  notify:
+    - Restart Icinga2

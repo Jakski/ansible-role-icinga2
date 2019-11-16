@@ -1,0 +1,21 @@
+---
+- name: "Find {{ title }}"
+  find:
+    path: "{{ path }}"
+    recurse: "{{ recurse | default(True) }}"
+    patterns: "{{ patterns | default(omit) }}"
+    file_type: any
+  register: found_
+
+# Everything except directory structure will be purged
+- name: "Remove unmanaged {{ title }}"
+  file:
+    path: "{{ item.path }}"
+    state: absent
+  when: >
+    (item.path | relpath(path)) not in managed
+    and not item.isdir
+  loop: "{{ found_.files }}"
+  loop_control:
+    label: "{{ item.path }}"
+  notify: "{{ notify | default([]) }}"

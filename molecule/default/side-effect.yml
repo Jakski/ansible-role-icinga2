@@ -1,0 +1,63 @@
+---
+- hosts: "master-{{ lookup('env', 'MOLECULE_INSTANCE_SUFFIX') | default('instance', true) }}"
+  tasks:
+    - include_vars: roles/icinga2/defaults/main.yml
+
+    - name: Create unmanaged zone directories
+      file:
+        path: "{{ icinga2_conf_dir }}/zones.d/{{ item }}"
+        state: directory
+        owner: "{{ icinga2_user }}"
+        group: "{{ icinga2_group }}"
+        mode: "0750"
+      loop:
+        - test1.local
+        - test1.local/hosts
+        - test2.local
+
+    - name: Create unmanaged zone objects
+      file:
+        path: "{{ icinga2_conf_dir }}/zones.d/{{ item }}"
+        state: touch
+        owner: "{{ icinga2_user }}"
+        group: "{{ icinga2_group }}"
+        mode: "0644"
+      loop:
+        - test1.local/groups.conf
+        - test1.local/hosts/host1.conf
+        - test2.local/groups.conf
+        - test2.local/hosts.conf
+
+    - name: Enable unmanaged feature
+      file:
+        path: "{{ icinga2_conf_dir }}/features-enabled/test.conf"
+        src: "{{ icinga2_conf_dir }}/feature-available/test.conf"
+        state: link
+        force: true
+        follow: false
+
+    - name: Create unmanaged configuration directories
+      file:
+        path: "{{ icinga2_conf_dir }}/conf.d/{{ item }}"
+        state: directory
+        owner: "{{ icinga2_user }}"
+        group: "{{ icinga2_group }}"
+        mode: "0750"
+      loop:
+        - hosts
+        - groups
+
+    - name: Create unmanaged objects
+      file:
+        path: "{{ icinga2_conf_dir }}/conf.d/{{ item }}"
+        state: touch
+        owner: "{{ icinga2_user }}"
+        group: "{{ icinga2_group }}"
+        mode: "0644"
+      loop:
+        - hosts/host1.conf
+        - hosts/host2.conf
+        - groups/group1.conf
+        - groups/group2.conf
+        - app2.conf
+        - notifications2.conf

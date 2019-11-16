@@ -1,0 +1,17 @@
+---
+icinga2_master_facts_:
+  data_dir: "{{ hostvars[icinga2_master].ansible_facts.icinga2_data_dir | default(icinga2_data_dir) }}"
+  user: "{{ hostvars[icinga2_master].ansible_facts.icinga2_user | default(icinga2_user) }}"
+  group: "{{ hostvars[icinga2_master].ansible_facts.icinga2_group | default(icinga2_group) }}"
+
+icinga2_zone_objects_: |
+  {% set ns = namespace(items=[]) -%}
+  {% for zone, files in icinga2_zones.items() -%}
+    {% for file, content in files.items() -%}
+      {% set ns.items = ns.items + [{
+        'path': zone + '/' + file + '.conf',
+        'content': content,
+      }] -%}
+    {% endfor -%}
+  {% endfor -%}
+  {{ ns.items }}

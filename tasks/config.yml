@@ -1,0 +1,77 @@
+---
+- name: Create Icinga2 main configuration
+  template:
+    src: "{{ icinga2_conf_template }}"
+    dest: "{{ icinga2_conf_dir }}/icinga2.conf"
+    owner: "{{ icinga2_user }}"
+    group: "{{ icinga2_group }}"
+    mode: "0640"
+  notify:
+    - Restart Icinga2
+
+- include_tasks: purge-unmanaged.yml
+  when: icinga2_manage_conf | bool
+  vars:
+    title: "objects"
+    path: "{{ icinga2_conf_dir }}/conf.d"
+    recurse: true
+    managed: "{{ icinga2_objects_conf.keys() | product(['conf']) | map('join', '.') | list }}"
+    patterns:
+      - "*.conf"
+
+- name: Create Icinga2 objects files
+  copy:
+    dest: "{{ icinga2_conf_dir }}/conf.d/{{ item.key }}.conf"
+    content: "{{ item.value }}"
+    owner: "{{ icinga2_user }}"
+    group: "{{ icinga2_group }}"
+    mode: "0644"
+  when: item.value is string
+  loop: "{{ icinga2_objects_conf | dict2items }}"
+  loop_control:
+    label: "{{ item.key }}.conf"
+  notify:
+    - Reload Icinga2
+
+- include_tasks: purge-unmanaged.yml
+  when: icinga2_manage_conf | bool
+  vars:
+    title: "zone objects"
+    path: "{{ icinga2_conf_dir }}/zones.d"
+    recursive: true
+    managed: "{{ icinga2_zone_objects_ | map(attribute='path') | list }}"
+
+- name: Create Icinga2 zone directories
+  file:
+    dest: "{{ icinga2_conf_dir }}/zones.d/{{ item }}"
+    state: directory
+    owner: "{{ icinga2_user }}"
+    group: "{{ icinga2_group }}"
+    mode: "0750"
+  loop: "{{ icinga2_zones.keys() | list }}"
+
+- name: Create Icinga2 zone objects
+  copy:
+    dest: "{{ icinga2_conf_dir }}/zones.d/{{ item.path }}"
+    content: "{{ item.content }}"
+    owner: "{{ icinga2_user }}"
+    group: "{{ icinga2_group }}"
+    mode: "0644"
+  when: item.content is string
+  loop: "{{ icinga2_zone_objects_ }}"
+  loop_control:
+    label: "{{ item.path }}"
+  notify:
+    - Reload Icinga2
+
+- name: Create Icinga2 scripts
+  copy:
+    dest: "{{ icinga2_scripts_dir }}/{{ item.key }}"
+    content: "{{ item.value }}"
+    owner: "{{ icinga2_user }}"
+    group: "{{ icinga2_group }}"
+    mode: "0755"
+  when: item.value is string
+  loop: "{{ icinga2_scripts | dict2items }}"
+  loop_control:
+    label: "{{ item.key }}"

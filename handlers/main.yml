@@ -1,0 +1,18 @@
+---
+- name: Validate Icinga2 configuration
+  command: "icinga2 daemon -C -c {{ icinga2_conf_dir }}/icinga2.conf"
+  listen:
+    - Restart Icinga2
+    - Reload Icinga2
+
+- name: Reload Icinga2
+  service:
+    name: "{{ icinga2_service }}"
+    state: reloaded
+  when: icinga2_reload and icinga2_state != 'stopped'
+
+- name: Restart Icinga2
+  service:
+    name: "{{ icinga2_service }}"
+    state: restarted
+  when: icinga2_restart and icinga2_state != 'stopped'

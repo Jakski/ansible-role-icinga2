@@ -1,0 +1,17 @@
+{% for name, value in icinga2_constants.items() %}
+const {{ name }} = "{{ value }}"
+{% endfor %}
+
+{% for include in icinga2_conf_includes %}
+{% if include.startswith("<") and include.endswith(">") %}
+include {{ include }}
+{% else %}
+include "{{ include }}"
+{% endif %}
+{% endfor %}
+
+{% for include in icinga2_conf_recursive_includes %}
+include_recursive "{{ include }}"
+{% endfor %}
+
+{{ icinga2_conf_extra }}

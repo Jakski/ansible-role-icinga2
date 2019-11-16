@@ -9,7 +9,7 @@ verifier:
   lint:
     name: flake8
 platforms:
-  - name: ${MOLECULE_INSTANCE_NAME:-instance}
+  - name: master-${MOLECULE_INSTANCE_SUFFIX:-instance}
     image: jakski/systemd:debian-10
     command: /sbin/init
     volumes:
@@ -25,7 +25,24 @@ provisioner:
     docker:
       create: ../docker-create.yml
     converge: playbook.yml
+    side_effect: side-effect.yml
   inventory:
     group_vars:
       all:
         ansible_python_interpreter: /usr/bin/python3
+scenario:
+  test_sequence:
+    - lint
+    - dependency
+    - cleanup
+    - destroy
+    - syntax
+    - create
+    - prepare
+    - converge
+    - side_effect
+    - converge
+    - idempotence
+    - verify
+    - cleanup
+    - destroy

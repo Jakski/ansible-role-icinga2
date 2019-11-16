@@ -1,0 +1,90 @@
+---
+- name: Create Icinga2 CA certificate
+  copy:
+    dest: "{{ icinga2_data_dir }}/ca/ca.crt"
+    content: "{{ icinga2_ca_cert }}"
+    owner: "{{ icinga2_user }}"
+    group: "{{ icinga2_group }}"
+    mode: "0644"
+  when: icinga2_ca_cert is not none
+  notify:
+    - Reload Icinga2
+
+- name: Create Icinga2 CA key
+  copy:
+    dest: "{{ icinga2_data_dir }}/ca/ca.key"
+    content: "{{ icinga2_ca_key }}"
+    owner: "{{ icinga2_user }}"
+    group: "{{ icinga2_group }}"
+    mode: "0600"
+  when: icinga2_ca_key is not none
+  notify:
+    - Reload Icinga2
+
+- name: Generate Icinga2 CA
+  command: icinga2 pki new-ca
+  args:
+    creates: "{{ icinga2_data_dir }}/ca/ca.key"
+  when: >
+    icinga2_ca_key is none
+    and icinga2_ca_cert is none
+  notify:
+    - Reload Icinga2
+
+- name: Create directory for certificates
+  file:
+    path: "{{ icinga2_data_dir }}/certs"
+    state: directory
+    owner: "{{ icinga2_user }}"
+    group: "{{ icinga2_group }}"
+    mode: "0700"
+
+- name: Get node name
+  command: icinga2 variable get NodeName
+  check_mode: false
+  changed_when: false
+  ignore_errors: "{{ ansible_check_mode }}"
+  register: icinga2_node_name_
+
+- name: Create Icinga2 client certificate
+  copy:
+    dest: "{{ icinga2_data_dir }}/certs/{{ icinga2_node_name_.stdout }}.crt"
+    content: "{{ icinga2_client_cert }}"
+    owner: "{{ icinga2_user }}"
+    group: "{{ icinga2_group }}"
+    mode: "0644"
+  when: >
+    icinga2_client_cert is not none
+    and icinga2_node_name_ is succeeded
+
+- name: Create Icinga2 client key
+  copy:
+    dest: "{{ icinga2_data_dir }}/certs/{{ icinga2_node_name_.stdout }}.key"
+    content: "{{ icinga2_client_key }}"
+    owner: "{{ icinga2_user }}"
+    group: "{{ icinga2_group }}"
+    mode: "0644"
+  when: >
+    icinga2_client_key is not none
+    and icinga2_node_name_ is succeeded
+
+- name: Read master CA certificate
+  slurp:
+    src: "{{ icinga2_master_facts_.data_dir }}/ca/ca.crt"
+  delegate_to: "{{ icinga2_master }}"
+  register: icinga2_ca_crt_
+
+- name: Create CA certificate
+  copy:
+    dest: "{{ icinga2_data_dir }}/certs/ca.crt"
+    content: "{{ icinga2_ca_crt_.content | b64decode }}"
+    owner: "{{ icinga2_user }}"
+    group: "{{ icinga2_group }}"
+    mode: "0644"
+  notify:
+    - Reload Icinga2
+
+- include_tasks: crt.yml
+  when: >
+    icinga2_client_cert is none
+    and icinga2_client_key is none

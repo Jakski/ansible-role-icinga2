@@ -1,0 +1,12 @@
+---
+- name: Install Icinga2
+  apt:
+    name: "{{ icinga2_packages }}"
+    default_release: "{{ icinga2_default_release }}"
+    state: present
+
+- name: Setup Icinga2 service
+  service:
+    name: "{{ icinga2_service }}"
+    state: "{{ icinga2_state }}"
+    enabled: "{{ icinga2_enabled }}"

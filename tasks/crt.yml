@@ -1,0 +1,50 @@
+---
+- name: Generate client CSR
+  command: >
+    icinga2 pki new-cert
+    --cn {{ icinga2_node_name_.stdout | quote }}
+    --key {{ icinga2_data_dir + '/certs/' + icinga2_node_name_.stdout + '.key' | quote }}
+    --csr {{ icinga2_data_dir + '/certs/' + icinga2_node_name_.stdout + '.csr' | quote }}
+  args:
+    creates: "{{ icinga2_data_dir }}/certs/{{ icinga2_node_name_.stdout }}.key"
+  notify:
+    - Reload Icinga2
+
+- name: Read client CSR
+  slurp:
+    src: "{{ icinga2_data_dir }}/certs/{{ icinga2_node_name_.stdout }}.csr"
+  register: icinga2_csr_
+
+- name: Upload client CSR to master
+  copy:
+    dest: "{{ icinga2_master_facts_['data_dir'] }}/certs/{{ icinga2_node_name_.stdout }}.csr"
+    content: "{{ icinga2_csr_.content | b64decode }}"
+    owner: "{{ icinga2_master_facts_['user'] }}"
+    group: "{{ icinga2_master_facts_['group'] }}"
+    mode: "0644"
+  delegate_to: "{{ icinga2_master }}"
+
+- name: Sign client CSR
+  command: >
+    icinga2 pki sign-csr
+    --csr {{ icinga2_master_facts_['data_dir'] + '/certs/' + icinga2_node_name_.stdout + '.csr' | quote }}
+    --cert {{ icinga2_master_facts_['data_dir'] + '/certs/' + icinga2_node_name_.stdout + '.crt' | quote }}
+  args:
+    creates: "{{ icinga2_master_facts_['data_dir'] }}/certs/{{ icinga2_node_name_.stdout }}.crt"
+  delegate_to: "{{ icinga2_master }}"
+
+- name: Read client certificate
+  slurp:
+    src: "{{ icinga2_master_facts_['data_dir'] }}/certs/{{ icinga2_node_name_.stdout }}.crt"
+  register: icinga2_client_cert_
+  delegate_to: "{{ icinga2_master }}"
+
+- name: Upload Icinga2 client certificate
+  copy:
+    dest: "{{ icinga2_data_dir }}/certs/{{ icinga2_node_name_.stdout }}.crt"
+    content: "{{ icinga2_client_cert_.content | b64decode }}"
+    owner: "{{ icinga2_user }}"
+    group: "{{ icinga2_group }}"
+    mode: "0644"
+  notify:
+    - Reload Icinga2
