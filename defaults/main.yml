@@ -9,7 +9,8 @@ icinga2_master: master-instance
 
 ###
 # Packages with Icinga2
-icinga2_packages: icinga2
+icinga2_packages:
+  - icinga2
 
 ###
 # Default packages release
