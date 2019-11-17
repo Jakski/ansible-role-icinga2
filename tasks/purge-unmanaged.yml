@@ -13,9 +13,10 @@
     path: "{{ item.path }}"
     state: absent
   when: >
-    (item.path | relpath(path)) not in managed
-    and not item.isdir
-  loop: "{{ found_.files }}"
+    (not item.isdir and item.path|relpath(path) not in managed)
+    or item.path|relpath(path) not in
+      managed|map('truncate', item.path|relpath(path)|length, True, '')|unique(True)
+  loop: "{{ found_.files | sort(True, attribute='path') }}"
   loop_control:
-    label: "{{ item.path }}"
+    label: "{{ item.path | relpath(path) }}"
   notify: "{{ notify | default([]) }}"

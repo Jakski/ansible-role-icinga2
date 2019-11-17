@@ -26,9 +26,9 @@ def test_master_configuration(master_instance):
     assert master_instance.file(
         '/etc/icinga2/zones.d/test3.local/groups.conf').contains('FreeBSD')
     assert master_instance.file(
-        '/etc/icinga2/zones.d/test3.local/hosts.conf').contains('host1')
+        '/etc/icinga2/zones.d/test3.local/local/hosts.conf').contains('host1')
     assert master_instance.file(
-        '/etc/icinga2/conf.d/host2.conf').contains('host2')
+        '/etc/icinga2/conf.d/local/host2.conf').contains('host2')
 
 
 def test_master_features(master_instance):
@@ -49,7 +49,7 @@ def test_master_unmanaged_configuration(master_instance):
         'conf.d/app2.conf',
         'conf.d/notifications2.conf',
         'zones.d/test1.local/groups.conf',
-        'zones.d/test1.local/hosts/host1.conf',
+        'zones.d/test1.local/local/hosts/host1.conf',
         'zones.d/test2.local/groups.conf',
         'zones.d/test2.local/hosts.conf',
     ]

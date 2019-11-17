@@ -19,6 +19,16 @@
     patterns:
       - "*.conf"
 
+- name: Create directories for objects
+  file:
+    path: "{{ icinga2_conf_dir }}/conf.d/{{ item }}"
+    state: directory
+    owner: "{{ icinga2_user }}"
+    group: "{{ icinga2_group }}"
+    mode: "0750"
+  when: item != '' # noqa 602
+  loop: "{{ icinga2_objects_conf.keys() | map('dirname') | unique(True) | list }}"
+
 - name: Create Icinga2 objects files
   copy:
     dest: "{{ icinga2_conf_dir }}/conf.d/{{ item.key }}.conf"
@@ -48,7 +58,8 @@
     owner: "{{ icinga2_user }}"
     group: "{{ icinga2_group }}"
     mode: "0750"
-  loop: "{{ icinga2_zones.keys() | list }}"
+  when: item != '' # noqa 602
+  loop: "{{ icinga2_zone_objects_ | map(attribute='path') | map('dirname') | unique(True) | list }}"
 
 - name: Create Icinga2 zone objects
   copy:

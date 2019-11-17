@@ -3,7 +3,7 @@
   vars:
     role_defaults: "{{ lookup('file', role_path + '/defaults/main.yml') | from_yaml }}"
     objects:
-      host2: |
+      local/host2: |
         object Host "host2" {
           import "generic-host"
           address = "127.0.0.1"
@@ -36,7 +36,7 @@
         icinga2_features: "{{ role_defaults.icinga2_features | combine({'api': None}) }}"
         icinga2_zones:
           test3.local:
-            hosts: |
+            local/hosts: |
               object Host "host1" {
                 import "generic-host"
                 address = "127.0.0.1"
