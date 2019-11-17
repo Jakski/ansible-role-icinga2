@@ -16,11 +16,16 @@ platforms:
       - /sys/fs/cgroup:/sys/fs/cgroup:ro
     privileged: true
     tty: true
+dependency:
+  name: shell
+  command: molecule/link-mitogen.sh
 provisioner:
   name: ansible
   config_options:
     defaults:
       stdout_callback: yaml
+      strategy_plugins: ${MOLECULE_SCENARIO_DIRECTORY}/plugins/strategy
+      strategy: mitogen_linear
   playbooks:
     docker:
       create: ../docker-create.yml

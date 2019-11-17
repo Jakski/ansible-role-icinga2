@@ -5,14 +5,18 @@
     - Restart Icinga2
     - Reload Icinga2
 
-- name: Reload Icinga2
-  service:
-    name: "{{ icinga2_service }}"
-    state: reloaded
-  when: icinga2_reload and icinga2_state != 'stopped'
-
 - name: Restart Icinga2
   service:
     name: "{{ icinga2_service }}"
     state: restarted
   when: icinga2_restart and icinga2_state != 'stopped'
+  register: icinga2_restart_
+
+- name: Reload Icinga2
+  service:
+    name: "{{ icinga2_service }}"
+    state: reloaded
+  when: >
+    icinga2_reload and icinga2_state != 'stopped'
+    and (icinga2_restart_ is not defined or
+         icinga2_restart_ is not changed)
