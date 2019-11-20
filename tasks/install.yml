@@ -4,6 +4,8 @@
     name: "{{ icinga2_packages }}"
     default_release: "{{ icinga2_default_release }}"
     state: present
+  notify:
+    - Restart Icinga2
 
 - name: Setup Icinga2 service
   service:
