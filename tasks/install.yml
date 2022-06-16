@@ -4,6 +4,7 @@
     name: "{{ icinga2_packages }}"
     default_release: "{{ icinga2_default_release }}"
     state: present
+    install_recommends: false
   notify:
     - Restart Icinga2
 
